@@ -1,0 +1,18 @@
+# Eclipse / Visual Studio Code
+.project
+.vscode/*
+.classpath
+**/.settings
+
+# IntelliJ
+**/.idea
+*.iml
+
+# macOS
+*.DS_Store
+
+# Windows
+Thumbs.db
+
+# Targets
+**/target
