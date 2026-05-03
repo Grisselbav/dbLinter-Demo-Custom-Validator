@@ -7,7 +7,10 @@ import ch.islandsql.grammar.IslandSqlParser;
 import com.grisselbav.dblinter.validator.base.AbstractCheck;
 import com.grisselbav.dblinter.validator.base.Check;
 import com.grisselbav.dblinter.validator.model.CheckIssue;
+import com.grisselbav.dblinter.validator.model.Range;
+import com.grisselbav.dblinter.validator.model.Replacement;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -15,8 +18,14 @@ import java.util.List;
  */
 public class DemoR2320 extends AbstractCheck {
     @Check(tenant = "Demo", rule = "R-2320")
-    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.FileContext ctx) {
-        // TODO: Implement one or more checks with different, suitable IslandSqlParser contexts.
+    public List<CheckIssue> checkAnsiSupportedDatatype(IslandSqlParser.AnsiSupportedDatatypeContext ctx) {
+        if (ctx.K_VARCHAR() != null) {
+            addIssue()
+                    .setRange(ctx.K_VARCHAR().getSymbol())
+                    .setMessage("Use VARCHAR2 instead of VARCHAR data type.")
+                    .addQuickFix("Replace " + ctx.K_VARCHAR().getText() + " with varchar2.", () ->  Collections.singletonList(
+                            new Replacement(new Range(ctx.K_VARCHAR()), "varchar2")), true);
+        }
         return checkIssues;
     }
 }
