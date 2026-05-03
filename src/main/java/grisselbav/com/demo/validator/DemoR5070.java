@@ -6,17 +6,39 @@ package grisselbav.com.demo.validator;
 import ch.islandsql.grammar.IslandSqlParser;
 import com.grisselbav.dblinter.validator.base.AbstractCheck;
 import com.grisselbav.dblinter.validator.base.Check;
+import com.grisselbav.dblinter.validator.model.CheckConfig;
 import com.grisselbav.dblinter.validator.model.CheckIssue;
 
+import java.util.HashSet;
 import java.util.List;
 
 /**
  * Demo R-5070: Avoid using Oracle predefined exceptions.
  */
 public class DemoR5070 extends AbstractCheck {
+    public static final String PREDEFINED_EXCEPTION_NAMES = "PredefinedExceptionNames";
+    private static HashSet<String> predefinedExceptionNames = null;
+
+    private static void setParameters() {
+        if (predefinedExceptionNames == null) {
+            predefinedExceptionNames = new HashSet<>(CheckConfig.INSTANCE.getParameterList(PREDEFINED_EXCEPTION_NAMES).stream().map(String::toLowerCase).toList());
+        }
+    }
+
+    // For testing purposes only
+    public static void clearCache() {
+        predefinedExceptionNames = null;
+    }
+
     @Check(tenant = "Demo", rule = "R-5070")
-    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.FileContext ctx) {
-        // TODO: Implement one or more checks with different, suitable IslandSqlParser contexts.
+    public List<CheckIssue> checkRaiseStatement(IslandSqlParser.RaiseStatementContext ctx) {
+        setParameters();
+        if (ctx.exceptionName != null
+                && predefinedExceptionNames.contains(ctx.exceptionName.getText().toLowerCase())) {
+            addIssue()
+                    .setRange(ctx.exceptionName)
+                    .setMessage("Raising Oracle predefined exception " + ctx.exceptionName.getText() + ".");
+        }
         return checkIssues;
     }
 }
