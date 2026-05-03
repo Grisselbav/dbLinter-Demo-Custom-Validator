@@ -15,8 +15,11 @@ import java.util.List;
  */
 public class DemoR4310 extends AbstractCheck {
     @Check(tenant = "Demo", rule = "R-4310")
-    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.FileContext ctx) {
-        // TODO: Implement one or more checks with different, suitable IslandSqlParser contexts.
+    public List<CheckIssue> checkGotoStatement(IslandSqlParser.GotoStatementContext ctx) {
+        addIssue()
+                .setRange(ctx.start)
+                .setMessage("Using GOTO.")
+                .addDbLinterIgnoreQuickFix(ctx, "Using GOTO because ...");
         return checkIssues;
     }
 }
