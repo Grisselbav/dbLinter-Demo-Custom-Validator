@@ -3,6 +3,7 @@
  */
 package grisselbav.com.demo.validator;
 
+import com.grisselbav.dblinter.validator.base.ValidatorUtil;
 import com.grisselbav.dblinter.validator.model.CheckConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -23,7 +24,6 @@ public class DemoR9010Test extends AbstractTest {
         Map<String, String> params = new HashMap<>();
         CheckConfig.INSTANCE.setParameters(params);
         CheckConfig.INSTANCE.setJdbcTemplate(jdbcTemplate);
-        // TODO: clear check cache if there is one
     }
 
     @Nested
@@ -57,7 +57,26 @@ public class DemoR9010Test extends AbstractTest {
             Assertions.assertEquals(30, issue1.getRange().getStartCol());
             Assertions.assertEquals(10, issue1.getRange().getEndLine());
             Assertions.assertEquals(37, issue1.getRange().getEndCol());
-            // TODO: assert quick fixes
+            // quick fix issue 1
+            Assertions.assertEquals("Add format model 'FXYYYY-MM-DD'.", issue1.getQuickFixes().get(0).getName());
+            var expected = """
+                create or replace package body employee_api is
+                   procedure set_dob(
+                      in_employee_id in employees.employee_id%type
+                     ,in_dob_str     in varchar2
+                   ) is
+                      co_employee_id constant employees.employee_id%type := in_employee_id;
+                      co_dob_str     constant type_up.date_string        := in_dob_str;
+                   begin
+                      update employees
+                         set date_of_birth = to_date(co_dob_str default null on conversion error, 'FXYYYY-MM-DD')
+                       where employee_id = co_employee_id;
+                   end set_dob;
+                end employee_api;
+                /
+                """;
+            String actual1 = ValidatorUtil.replace(doc.getTokenStream().getText(), issue1.getQuickFixes().get(0).get().get(0));
+            Assertions.assertEquals(expected, actual1);
         }
 
         @Nested
