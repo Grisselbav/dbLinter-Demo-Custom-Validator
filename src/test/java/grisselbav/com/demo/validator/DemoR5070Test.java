@@ -24,8 +24,7 @@ public class DemoR5070Test extends AbstractTest {
         params.put("PredefinedExceptionNames", """
                 access_into_null, case_not_found,collection_is_null, cursor_already_open, dup_val_on_index, invalid_cursor, invalid_number, login_denied, no_data_found, no_data_needed, not_logged_on, program_error, rowtype_mismatch, self_is_null, storage_error, subscript_beyond_count, subscript_outside_limit, sys_invalid_rowid, timeout_on_resource, too_many_rows, value_error, zero_divide""");
         CheckConfig.INSTANCE.setParameters(params);
-        CheckConfig.INSTANCE.setJdbcTemplate(jdbcTemplate);
-        // TODO: clear check cache if there is one
+        DemoR5070.clearCache();
     }
 
     @Nested
