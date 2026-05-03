@@ -3,6 +3,7 @@
  */
 package grisselbav.com.demo.validator;
 
+import com.grisselbav.dblinter.validator.base.ValidatorUtil;
 import com.grisselbav.dblinter.validator.model.CheckConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -17,15 +18,6 @@ import java.util.Map;
  * Tests for Demo R-2320: Never use VARCHAR data type.
  */
 public class DemoR2320Test extends AbstractTest {
-    @BeforeEach
-    @AfterEach
-    public void setup() {
-        Map<String, String> params = new HashMap<>();
-        CheckConfig.INSTANCE.setParameters(params);
-        CheckConfig.INSTANCE.setJdbcTemplate(jdbcTemplate);
-        // TODO: clear check cache if there is one
-    }
-
     @Nested
     public class OracleDB {
 
@@ -42,12 +34,20 @@ public class DemoR2320Test extends AbstractTest {
             // issue 1
             var issue1 = issues.get(0);
             Assertions.assertEquals("""
-                    Use VARHCHAR2 instead of VARCHAR data type.""", issue1.getMessage());
+                    Use VARCHAR2 instead of VARCHAR data type.""", issue1.getMessage());
             Assertions.assertEquals(2, issue1.getRange().getStartLine());
             Assertions.assertEquals(32, issue1.getRange().getStartCol());
             Assertions.assertEquals(2, issue1.getRange().getEndLine());
-            Assertions.assertEquals(44, issue1.getRange().getEndCol());
-            // TODO: assert quick fixes
+            Assertions.assertEquals(39, issue1.getRange().getEndCol());
+            // quick fix 1
+            var expected = """
+                create or replace package types_up is
+                   subtype description_type is varchar2(200);
+                end types_up;
+                /
+                """;
+            String actual = ValidatorUtil.applyReplacements(doc, issue1.getQuickFixes().get(0).get());
+            Assertions.assertEquals(expected, actual);
         }
 
         @Nested
