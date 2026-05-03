@@ -4,19 +4,116 @@
 package grisselbav.com.demo.validator;
 
 import ch.islandsql.grammar.IslandSqlParser;
+import ch.islandsql.grammar.IslandSqlParserRuleContext;
+import ch.islandsql.grammar.util.ParseTreeUtil;
 import com.grisselbav.dblinter.validator.base.AbstractCheck;
 import com.grisselbav.dblinter.validator.base.Check;
+import com.grisselbav.dblinter.validator.model.CheckConfig;
 import com.grisselbav.dblinter.validator.model.CheckIssue;
+import com.grisselbav.dblinter.validator.model.Range;
+import com.grisselbav.dblinter.validator.model.Replacement;
+import org.antlr.v4.runtime.Token;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Demo R-9010: Always use a format model in string to date/time conversion functions.
  */
 public class DemoR9010 extends AbstractCheck {
+    private static String dateFormatModel = null;
+    private static String timestampFormatModel = null;
+    private static String timestampTzFormatModel = null;
+
+    private static void setFormatModels() {
+        if (CheckConfig.INSTANCE.getJdbcTemplate() != null && dateFormatModel == null) {
+            String sql = """
+                    select max(decode(parameter, 'NLS_DATE_FORMAT', value)) as nls_date_format,
+                           max(decode(parameter, 'NLS_TIMESTAMP_FORMAT', value)) as nls_timestamp_format,
+                           max(decode(parameter, 'NLS_TIMESTAMP_TZ_FORMAT', value)) as nls_timestamp_tz_format
+                     from nls_session_parameters
+                    where parameter in ('NLS_DATE_FORMAT', 'NLS_TIMESTAMP_FORMAT', 'NLS_TIMESTAMP_TZ_FORMAT')
+                    """;
+            String[] result = CheckConfig.INSTANCE.getJdbcTemplate().queryForObject(
+                    sql, (rs, rowNum) -> new String[]{
+                            rs.getString(1),
+                            rs.getString(2),
+                            rs.getString(3)
+                    }
+            );
+            if (result != null) {
+                dateFormatModel = result[0].startsWith("FX") ? result[0] : "FX" + result[0];
+                timestampFormatModel = result[1].startsWith("FX") ? result[1] : "FX" + result[1];
+                timestampTzFormatModel = result[2];
+            }
+        }
+        if (dateFormatModel == null) {
+            dateFormatModel = "FXYYYY-MM-DD";
+        }
+        if (timestampFormatModel == null) {
+            timestampFormatModel = "FXYYYY-MM-DD HH24:MI:SS.FF";
+        }
+        if (timestampTzFormatModel == null) {
+            // do not ad FX since this causes an ORA-01862 with an explicit plus sign
+            timestampTzFormatModel = "YYYY-MM-DD\"T\"HH24:MI:SSXFFTZH:TZM";
+        }
+    }
+
+    private static boolean parameterIsNotNull(IslandSqlParserRuleContext param) {
+        return (param != null && !param.getText().equalsIgnoreCase("null") && !param.getText().equals("''"));
+    }
+
+    public static Supplier<List<Replacement>> quickFix(Token closeParen, String format) {
+        return () -> {
+            Range range = new Range(closeParen);
+            return Collections.singletonList(new Replacement(range, ", " + format + ")"));
+        };
+    }
+
     @Check(tenant = "Demo", rule = "R-9010")
-    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.FileContext ctx) {
-        // TODO: Implement one or more checks with different, suitable IslandSqlParser contexts.
+    public List<CheckIssue> checkFunctionExpression(IslandSqlParser.FunctionExpressionContext ctx) {
+        setFormatModels();
+        if (ctx.name.getText().equalsIgnoreCase("to_date")) {
+            if (!ctx.params.isEmpty() && parameterIsNotNull(ctx.params.get(0))) {
+                if (ctx.params.size() == 1) {
+                    addIssue()
+                            .setRange(ctx.name)
+                            .setMessage("Missing format model in to_date call.")
+                            .addQuickFix("Add format model '" + dateFormatModel + "'.", quickFix(ctx.getStop(), "'" + dateFormatModel + "'"));
+                }
+            }
+        } else if (ctx.name.getText().equalsIgnoreCase("to_timestamp")) {
+            if (!ctx.params.isEmpty() && parameterIsNotNull(ctx.params.get(0))) {
+                if (ctx.params.size() == 1) {
+                    addIssue()
+                            .setRange(ctx.name)
+                            .setMessage("Missing format model in to_timestamp call.")
+                            .addQuickFix("Add format model '" + timestampFormatModel + "'.", quickFix(ctx.getStop(), "'" + timestampFormatModel + "'"));
+                }
+            }
+        } else if (ctx.name.getText().equalsIgnoreCase("to_timestamp_tz")) {
+            if (!ctx.params.isEmpty() && parameterIsNotNull(ctx.params.get(0))) {
+                if (ctx.params.size() == 1) {
+                    addIssue()
+                            .setRange(ctx.name)
+                            .setMessage("Missing format model in to_timestamp_tz call.")
+                            .addQuickFix("Add format model '" + timestampTzFormatModel + "'.", quickFix(ctx.getStop(), "'" + timestampTzFormatModel + "'"));
+                }
+            }
+        }
+        return checkIssues;
+    }
+
+    @Check(tenant = "Demo", rule = "R-9010")
+    public List<CheckIssue> checkCast(IslandSqlParser.CastContext ctx) {
+        if (parameterIsNotNull(ctx.expr)) {
+            if (!ParseTreeUtil.getAllContentsOfType(ctx.typeName, IslandSqlParser.DatetimeDatatypeContext.class).isEmpty()) {
+                addIssue()
+                        .setRange(ctx.typeName)
+                        .setMessage("Missing format model in cast to date/time.");
+            }
+        }
         return checkIssues;
     }
 }
