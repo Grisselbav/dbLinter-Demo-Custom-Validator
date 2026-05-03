@@ -62,3 +62,8 @@ Run a single test:
 ```bash
 ./mvnw -Dtest=DemoR2320Test test
 ```
+
+## Post-Generation Changes
+
+See the [changes](https://github.com/Grisselbav/dbLinter-Demo-Custom-Validator/compare/v1...v2) made
+after the initial code generation with `dblinter gen-java`.
