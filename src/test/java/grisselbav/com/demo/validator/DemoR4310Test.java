@@ -17,15 +17,6 @@ import java.util.Map;
  * Tests for Demo R-4310: Never use GOTO statements in your code.
  */
 public class DemoR4310Test extends AbstractTest {
-    @BeforeEach
-    @AfterEach
-    public void setup() {
-        Map<String, String> params = new HashMap<>();
-        CheckConfig.INSTANCE.setParameters(params);
-        CheckConfig.INSTANCE.setJdbcTemplate(jdbcTemplate);
-        // TODO: clear check cache if there is one
-    }
-
     @Nested
     public class OracleDB {
 
