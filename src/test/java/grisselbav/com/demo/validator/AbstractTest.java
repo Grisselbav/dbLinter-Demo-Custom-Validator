@@ -10,55 +10,15 @@ import com.grisselbav.dblinter.validator.base.ValidatorUtil;
 import com.grisselbav.dblinter.validator.model.CheckIssue;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.junit.jupiter.api.Assertions;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Abstract base class for dbLinter validator test cases.
  */
-public abstract class AbstractTest {
+public abstract class AbstractTest extends AbstractJdbcTest {
     protected IslandSqlDocument doc;
     protected List<CheckIssue> issues;
-
-    protected static SingleConnectionDataSource dataSource;
-    protected static JdbcTemplate jdbcTemplate;
-
-    // Set up the database connection for checks that require a database connection.
-    static {
-        final Properties p = new Properties();
-        try {
-            p.load(AbstractTest.class.getClassLoader().getResourceAsStream("application.properties"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        // User for read-only dictionary access
-        String driverClassName = p.getProperty("jdbc.driverClassName");
-        String url = p.getProperty("jdbc.url");
-        String username = p.getProperty("jdbc.username");
-        String password = p.getProperty("jdbc.password");
-        if (driverClassName != null && !driverClassName.trim().isEmpty()
-            && url != null && !url.trim().isEmpty()
-            && username != null && !username.trim().isEmpty()
-            && password != null && !password.trim().isEmpty())
-        {
-            // We have all JDBC properties to establish a connection
-            dataSource = new SingleConnectionDataSource();
-            dataSource.setDriverClassName(driverClassName);
-            dataSource.setUrl(p.getProperty("jdbc.url"));
-            dataSource.setUsername(p.getProperty("jdbc.username"));
-            dataSource.setPassword(p.getProperty("jdbc.password"));
-            jdbcTemplate = new JdbcTemplate(dataSource);
-        } else {
-            // We need all JDBC properties to establish a connection
-            // As a result, when properties are missing, we do not provide a jdbcTemplate
-            dataSource = null;
-            jdbcTemplate = null;
-        }
-    }
 
     /**
      * Parse the SQL and optionally check for errors.
