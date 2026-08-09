@@ -15,8 +15,10 @@ import java.util.List;
  */
 public class DemoR3131 extends AbstractCheck {
     @Check(tenant = "Demo", rule = "R-3131")
-    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.FileContext ctx) {
-        // TODO: Implement one or more checks with different, suitable IslandSqlParser contexts.
+    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.JoinVariantContext ctx) {
+        addIssue()
+                .setRange(ctx.start)
+                .setMessage("Use Oracle instead of ANSI SQL-92 join syntax.");
         return checkIssues;
     }
 }
