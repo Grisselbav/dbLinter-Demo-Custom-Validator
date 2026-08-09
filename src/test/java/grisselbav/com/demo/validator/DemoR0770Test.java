@@ -3,34 +3,17 @@
  */
 package grisselbav.com.demo.validator;
 
-import com.grisselbav.dblinter.validator.model.CheckConfig;
-import org.junit.jupiter.api.AfterEach;
+import com.grisselbav.dblinter.validator.base.ValidatorUtil;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Tests for Demo R-0770: Never allow application pages within an HTML frame.
  */
 public class DemoR0770Test extends AbstractApxTest {
-    @BeforeEach
-    @AfterEach
-    public void setup() {
-        Map<String, String> params = new HashMap<>();
-        params.put("ApexWorkspaces", """
-                dblinter, dbl_gui""");
-        CheckConfig.INSTANCE.setParameters(params);
-        CheckConfig.INSTANCE.setJdbcTemplate(jdbcTemplate);
-        // TODO: clear check cache if there is one
-    }
-
     @Nested
     public class APEX {
-
         @Test
         public void non_compliant_1() {
             parse("""
@@ -50,12 +33,21 @@ public class DemoR0770Test extends AbstractApxTest {
             Assertions.assertEquals(24, issue1.getRange().getStartCol());
             Assertions.assertEquals(3, issue1.getRange().getEndLine());
             Assertions.assertEquals(29, issue1.getRange().getEndCol());
-            // TODO: assert quick fixes
+            Assertions.assertEquals(1, issue1.getQuickFixes().size());
+            Assertions.assertEquals("Change value to allowSameOrigin.", issue1.getQuickFixes().get(0).getName());
+            var expected1 = """
+            app DEMO (
+                security {
+                    embedInFrames: allowSameOrigin
+                }
+            )
+            """;
+            String actual1 = ValidatorUtil.replace(doc.getTokenStream().getText(), issue1.getQuickFixes().get(0).get().get(0));
+            Assertions.assertEquals(expected1, actual1);
         }
 
         @Nested
         public class Solution {
-
             @Test
             public void with_4_stars() {
                 parse("""
@@ -79,6 +71,17 @@ public class DemoR0770Test extends AbstractApxTest {
                         )
                         """);
                 check("Demo", "R-0770");
+                Assertions.assertEquals(0, issues.size());
+            }
+
+            @Test
+            public void solution_5_star_after_export() {
+                parse("""
+                        app demo (
+                            name: Demo App
+                        )
+                        """);
+                check("Demo", "R-1010");
                 Assertions.assertEquals(0, issues.size());
             }
         }
