@@ -3,29 +3,14 @@
  */
 package grisselbav.com.demo.validator;
 
-import com.grisselbav.dblinter.validator.model.CheckConfig;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Tests for Demo R-3131: Never use ANSI SQL-92 join syntax.
  */
 public class DemoR3131Test extends AbstractTest {
-    @BeforeEach
-    @AfterEach
-    public void setup() {
-        Map<String, String> params = new HashMap<>();
-        CheckConfig.INSTANCE.setParameters(params);
-        CheckConfig.INSTANCE.setJdbcTemplate(jdbcTemplate);
-        // TODO: clear check cache if there is one
-    }
-
     @Nested
     public class OracleDB {
 
