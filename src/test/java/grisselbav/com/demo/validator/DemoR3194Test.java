@@ -3,7 +3,9 @@
  */
 package grisselbav.com.demo.validator;
 
+import com.grisselbav.dblinter.validator.base.ValidatorUtil;
 import com.grisselbav.dblinter.validator.model.CheckConfig;
+import com.grisselbav.dblinter.validator.model.Replacement;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,21 +13,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Tests for Demo R-3194: Always specify INNER or OUTER within JOIN TO ONE.
  */
 public class DemoR3194Test extends AbstractTest {
-    @BeforeEach
-    @AfterEach
-    public void setup() {
-        Map<String, String> params = new HashMap<>();
-        CheckConfig.INSTANCE.setParameters(params);
-        CheckConfig.INSTANCE.setJdbcTemplate(jdbcTemplate);
-        // TODO: clear check cache if there is one
-    }
-
     @Nested
     public class OracleDB {
 
@@ -57,6 +52,9 @@ public class DemoR3194Test extends AbstractTest {
             Assertions.assertEquals(11, issue1.getRange().getStartCol());
             Assertions.assertEquals(9, issue1.getRange().getEndLine());
             Assertions.assertEquals(22, issue1.getRange().getEndCol());
+            Assertions.assertEquals(2, issue1.getQuickFixes().size());
+            Assertions.assertEquals("Add OUTER JOIN", issue1.getQuickFixes().get(0).getName());
+            Assertions.assertEquals("Add INNER JOIN", issue1.getQuickFixes().get(1).getName());
             // issue 2
             var issue2 = issues.get(1);
             Assertions.assertEquals("""
@@ -65,6 +63,9 @@ public class DemoR3194Test extends AbstractTest {
             Assertions.assertEquals(11, issue2.getRange().getStartCol());
             Assertions.assertEquals(10, issue2.getRange().getEndLine());
             Assertions.assertEquals(15, issue2.getRange().getEndCol());
+            Assertions.assertEquals(2, issue2.getQuickFixes().size());
+            Assertions.assertEquals("Add OUTER JOIN", issue2.getQuickFixes().get(0).getName());
+            Assertions.assertEquals("Add INNER JOIN", issue2.getQuickFixes().get(1).getName());
             // issue 3
             var issue3 = issues.get(2);
             Assertions.assertEquals("""
@@ -73,7 +74,55 @@ public class DemoR3194Test extends AbstractTest {
             Assertions.assertEquals(11, issue3.getRange().getStartCol());
             Assertions.assertEquals(11, issue3.getRange().getEndLine());
             Assertions.assertEquals(20, issue3.getRange().getEndCol());
-            // TODO: assert quick fixes
+            Assertions.assertEquals(2, issue3.getQuickFixes().size());
+            Assertions.assertEquals("Add OUTER JOIN", issue3.getQuickFixes().get(0).getName());
+            Assertions.assertEquals("Add INNER JOIN", issue3.getQuickFixes().get(1).getName());
+            // apply all default quick fixes (OUTER JOIN) for all issues
+            String expected1 = """
+                    select e.first_name || ' ' || e.last_name as employee_full_name
+                          ,e.salary
+                          ,d.department_name
+                          ,j.job_title
+                          ,mgr.first_name || ' ' || mgr.last_name as manager_full_name
+                          ,mgr.salary as manager_salary
+                      from employees e
+                      join to one (
+                              outer join departments d
+                              outer join jobs j
+                              outer join employees mgr on e.manager_id = mgr.employee_id
+                           )
+                     where e.salary > mgr.salary
+                        or mgr.employee_id is null;
+                    """;
+            String actual1 = ValidatorUtil.applyQuickFixes(doc, issues);
+            Assertions.assertEquals(expected1, actual1);
+            // apply second quick fixes for issue 1 and issue 2, and first quick fix for issue 3
+            String expected2 = """
+                    select e.first_name || ' ' || e.last_name as employee_full_name
+                          ,e.salary
+                          ,d.department_name
+                          ,j.job_title
+                          ,mgr.first_name || ' ' || mgr.last_name as manager_full_name
+                          ,mgr.salary as manager_salary
+                      from employees e
+                      join to one (
+                              inner join departments d
+                              inner join jobs j
+                              outer join employees mgr on e.manager_id = mgr.employee_id
+                           )
+                     where e.salary > mgr.salary
+                        or mgr.employee_id is null;
+                    """;
+            List<Replacement> replacements =
+                    Stream.of(
+                                    issue1.getQuickFixes().get(1).get(),
+                                    issue2.getQuickFixes().get(1).get(),
+                                    issue3.getQuickFixes().get(0).get()
+                            )
+                            .flatMap(List::stream)
+                            .toList();
+            String actual2 = ValidatorUtil.applyReplacements(doc, replacements);
+            Assertions.assertEquals(expected2, actual2);
         }
 
         @Nested
