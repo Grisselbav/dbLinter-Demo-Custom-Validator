@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * Tests for Demo R-0770: Never allow application pages within an HTML frame.
  */
-public class DemoR0770Test extends AbstractTest {
+public class DemoR0770Test extends AbstractApxTest {
     @BeforeEach
     @AfterEach
     public void setup() {
