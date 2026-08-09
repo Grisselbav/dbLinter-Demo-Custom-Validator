@@ -3,20 +3,58 @@
  */
 package grisselbav.com.demo.validator;
 
+import ch.islandsql.grammar.IslandSqlLexer;
 import ch.islandsql.grammar.IslandSqlParser;
 import com.grisselbav.dblinter.validator.base.AbstractCheck;
 import com.grisselbav.dblinter.validator.base.Check;
 import com.grisselbav.dblinter.validator.model.CheckIssue;
+import com.grisselbav.dblinter.validator.model.Range;
+import com.grisselbav.dblinter.validator.model.Replacement;
+import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Demo R-3194: Always specify INNER or OUTER within JOIN TO ONE.
  */
 public class DemoR3194 extends AbstractCheck {
     @Check(tenant = "Demo", rule = "R-3194")
-    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.FileContext ctx) {
-        // TODO: Implement one or more checks with different, suitable IslandSqlParser contexts.
+    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.JtoJoinListContext ctx) {
+        for (int i = 0; i < ctx.jtoJoinTables.size(); i++) {
+            if (i == 0 && ctx.jtoJoinSpec() == null
+                    || i > 0 && ctx.jtoListDelimiter(i-1).start.getType() == IslandSqlLexer.COMMA) {
+                IslandSqlParser.TableReferenceContext tableRef = ctx.jtoJoinTables.get(i).jtoTableExpression().tableReference();
+                addIssue()
+                        .setRange(tableRef)
+                        .setMessage("Specify an OUTER or INNER JOIN clause for " + tableRef.getText() + ".")
+                        .addQuickFix("Add OUTER JOIN", createQuickFixForJoin(ctx, i, "outer"), true)
+                        .addQuickFix("Add INNER JOIN", createQuickFixForJoin(ctx, i, "inner"), false);
+            }
+        }
         return checkIssues;
+    }
+
+    private Supplier<List<Replacement>> createQuickFixForJoin(IslandSqlParser.JtoJoinListContext ctx, int index, String joinType) {
+        return () -> {
+            IslandSqlParser.TableReferenceContext tableRef = ctx.jtoJoinTables.get(index).jtoTableExpression().tableReference();
+            Range range;
+            String replacementText = joinType + " join " + tableRef.getText();
+            if (index == 0) {
+                // first table reference in the join to one list does not have a preceding comma, so the range is just the table reference
+                range = new Range(tableRef);
+            } else {
+                // subsequent table references in the join to one list have a preceding comma, so the range includes the comma and the table reference
+                Token comma = ctx.jtoListDelimiter(index - 1).start;
+                Range commaRange = new Range(comma);
+                Range tableRefRange = new Range(tableRef);
+                range = new Range(commaRange.getStartLine(), commaRange.getStartCol(), tableRefRange.getEndLine(), tableRefRange.getEndCol());
+                if (tableRef.getTokenStream().get(comma.getTokenIndex()).getType() != IslandSqlLexer.WS) {
+                    // missing whitespace before the comma, add a space for valid syntax
+                    replacementText = " " + replacementText;
+                }
+            }
+            return List.of(new Replacement(range, replacementText));
+        };
     }
 }
