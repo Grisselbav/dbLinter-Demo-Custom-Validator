@@ -3,11 +3,14 @@
  */
 package grisselbav.com.demo.validator;
 
-import ch.islandsql.grammar.IslandSqlParser;
+import com.grisselbav.apexlang.grammar.ApexLangParser;
 import com.grisselbav.dblinter.validator.base.AbstractCheck;
 import com.grisselbav.dblinter.validator.base.Check;
 import com.grisselbav.dblinter.validator.model.CheckIssue;
+import com.grisselbav.dblinter.validator.model.Range;
+import com.grisselbav.dblinter.validator.model.Replacement;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -15,8 +18,14 @@ import java.util.List;
  */
 public class DemoR0770 extends AbstractCheck {
     @Check(tenant = "Demo", rule = "R-0770")
-    public List<CheckIssue> checkPlsqlStatement(IslandSqlParser.FileContext ctx) {
-        // TODO: Implement one or more checks with different, suitable IslandSqlParser contexts.
+    public List<CheckIssue> checkProperty(ApexLangParser.PropertyContext ctx) {
+        if ("embedInFrames".equals(ctx.name.getText()) && ctx.pvalue.getText().trim().equals("allow")) {
+            addIssue()
+                    .setRange(ctx.pvalue)
+                    .setMessage("Displaying content in frames is insecure.")
+                    .addQuickFix("Change value to allowSameOrigin.", () -> Collections.singletonList(
+                            new Replacement(new Range(ctx.pvalue), "allowSameOrigin")), true);
+        }
         return checkIssues;
     }
 }
