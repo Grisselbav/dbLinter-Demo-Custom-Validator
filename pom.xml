@@ -12,14 +12,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
         <!-- Dependency versions -->
-        <dblinter.version>1.7.0</dblinter.version>
-        <islandsql.version>0.23.0</islandsql.version>
-        <apexlang-parser.version>0.1.0</apexlang-parser.version>
-        <classgraph.version>4.8.184</classgraph.version>
+        <dblinter.version>1.9.0</dblinter.version>
+        <islandsql.version>0.24.0</islandsql.version>
+        <apexlang-parser.version>0.2.0</apexlang-parser.version>
+        <classgraph.version>4.8.186</classgraph.version>
         <spring.version>7.0.8</spring.version>
-        <oracledb.version>23.26.2.0.0</oracledb.version>
-        <postgresql.version>42.7.11</postgresql.version>
-        <junit.version>6.1.0</junit.version>
+        <oracledb.version>23.26.3.0.0</oracledb.version>
+        <postgresql.version>42.7.13</postgresql.version>
+        <junit.version>6.1.2</junit.version>
         <!-- Plugin versions -->
         <maven-compiler.version>3.15.0</maven-compiler.version>
         <maven-enforcer.version>3.6.3</maven-enforcer.version>
