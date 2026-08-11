@@ -11,5 +11,5 @@ dblinter gen-java \
   --outputName=dbLinter-Demo-Custom-Validator \
   --tenantFilter=Demo \
   --ruleFilter=.+ \
-  --groupId=grisselbav.com \
-  --packageName=grisselbav.com.demo.validator
+  --groupId=com.grisselbav \
+  --packageName=com.grisselbav.demo.validator
