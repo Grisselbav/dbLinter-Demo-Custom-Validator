@@ -6,6 +6,7 @@ dblinter gen-java \
   --repoUrl=http://127.0.0.1:8080 \
   --tenantName=Demo \
   --userName=philipp.salvisberg+42@gmail.com \
+  --accessToken=$DBLINTER_DEMO_ACCESS_TOKEN \
   --configName=Default \
   --indent=4 \
   --outputName=dbLinter-Demo-Custom-Validator \
