@@ -12,17 +12,27 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
         <!-- Dependency versions -->
-        <dblinter.version>1.9.0</dblinter.version>
-        <islandsql.version>0.24.0</islandsql.version>
+        <dblinter.version>1.10.0</dblinter.version>
+        <islandsql.version>0.25.0</islandsql.version>
         <apexlang-parser.version>0.2.0</apexlang-parser.version>
-        <classgraph.version>4.8.186</classgraph.version>
+        <classgraph.version>4.8.192</classgraph.version>
         <spring.version>7.0.8</spring.version>
         <oracledb.version>23.26.3.0.0</oracledb.version>
         <postgresql.version>42.7.13</postgresql.version>
-        <junit.version>6.1.2</junit.version>
+        <junit.version>6.1.3</junit.version>
         <!-- Plugin versions -->
         <maven-compiler.version>3.15.0</maven-compiler.version>
         <maven-enforcer.version>3.6.3</maven-enforcer.version>
+        <maven-exec.version>3.6.3</maven-exec.version>
+        <maven-deploy.version>3.1.4</maven-deploy.version>
+        <!-- dblinter import-validator defaults -->
+        <dblinter.repoUrl>https://api.dblinter.app</dblinter.repoUrl>
+        <dblinter.tenantName>Demo</dblinter.tenantName>
+        <dblinter.userName>philipp.salvisberg+42@gmail.com</dblinter.userName>
+        <!--suppress XmlUnresolvedReference -->
+        <dblinter.accessToken>${env.DBLINTER_DEMO_ACCESS_TOKEN}</dblinter.accessToken>
+        <dblinter.ownerName>Demo</dblinter.ownerName>
+        <dblinter.parserVersion>${islandsql.version}</dblinter.parserVersion>
     </properties>
     <dependencies>
         <dependency>
@@ -113,6 +123,41 @@
                                     <version>[${java.version},)</version>
                                 </requireJavaVersion>
                             </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven-deploy.version}</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${maven-exec.version}</version>
+                <executions>
+                    <execution>
+                        <id>import-validator</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>dblinter</executable>
+                            <arguments>
+                                <argument>import-validator</argument>
+                                <argument>--repoUrl=${dblinter.repoUrl}</argument>
+                                <argument>--tenantName=${dblinter.tenantName}</argument>
+                                <argument>--userName=${dblinter.userName}</argument>
+                                <argument>--accessToken=${dblinter.accessToken}</argument>
+                                <argument>--inputName=${project.build.directory}/${project.build.finalName}.jar</argument>
+                                <argument>--ownerName=${dblinter.ownerName}</argument>
+                                <argument>--parserVersion=${dblinter.parserVersion}</argument>
+                            </arguments>
                         </configuration>
                     </execution>
                 </executions>
