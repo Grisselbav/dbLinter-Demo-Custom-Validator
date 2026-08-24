@@ -63,6 +63,25 @@ Run a single test:
 ./mvnw -Dtest=DemoR2320Test test
 ```
 
+## Deploy (Import Validator)
+
+The `deploy` phase imports the validator JAR via the `dblinter import-validator` command into the dbLinter repository.
+For this to work, `dblinter` must be found on the OS path.
+
+```bash
+./mvnw clean deploy
+```
+
+Either define the `DBLINTER_ACCESS_TOKEN` environment variable, or pass the `-Ddblinter.accessToken=...` property
+to provide the access token for the `import-validator` command.
+
+For all other properties, default values are defined in the [pom.xml](pom.xml).
+These default values can be overridden on the command line, for example:
+
+```bash
+./mvnw clean deploy -Ddblinter.repoUrl=https://test-api.dblinter.com -Ddblinter.parserVersion=0.21.0
+```
+
 ## Post-Generation Changes
 
 See the [changes](https://github.com/Grisselbav/dbLinter-Demo-Custom-Validator/compare/v1...v2) made
