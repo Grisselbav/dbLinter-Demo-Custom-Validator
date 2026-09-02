@@ -5,19 +5,19 @@
 This project was generated using the [dbLinter CLI](https://grisselbav.github.io/dbLinter/tools/cli/cli-overview/)'s `gen-java` command.
 The following options were used:
 
-| Option           | Value (Default when not specified)  |
-| ---------------- |-------------------------------------|
-| `--repoUrl`      | `https://api.dblinter.app`          |
-| `--tenantName`   | `Demo`                              |
-| `--userName`     | `philipp.salvisberg+42@gmail.com`   |
-| `--accessToken`  | `***`                               |
-| `--configName`   | `Default`                           |
-| `--indent`       | `4`                                 |
-| `--outputName`   | `dbLinter-Demo-Custom-Validator`    |
-| `--tenantFilter` | `(?i)^Demo$`                        |
-| `--ruleFilter`   | `.+`                                |
-| `--groupId`      | `com.grisselbav`                    |
-| `--packageName`  | `com.grisselbav.demo.validator` |
+| Option           | Value (Default when not specified) |
+|------------------|------------------------------------|
+| `--repoUrl`      | `https://api.dblinter.app`         |
+| `--tenantName`   | `Demo`                             |
+| `--userName`     | `philipp.salvisberg+42@gmail.com`  |
+| `--accessToken`  | `***`                              |
+| `--configName`   | `Default`                          |
+| `--indent`       | `4`                                |
+| `--outputName`   | `dbLinter-Demo-Custom-Validator`   |
+| `--tenantFilter` | `(?i)^Demo$`                       |
+| `--ruleFilter`   | `.+`                               |
+| `--groupId`      | `com.grisselbav`                   |
+| `--packageName`  | `com.grisselbav.demo.validator`    |
 
 It provides a ready-to-implement Java project that includes:
 
