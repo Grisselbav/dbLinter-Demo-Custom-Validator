@@ -79,7 +79,7 @@ For all other properties, default values are defined in the [pom.xml](pom.xml).
 These default values can be overridden on the command line, for example:
 
 ```bash
-./mvnw clean deploy -Ddblinter.repoUrl=https://test-api.dblinter.app -Ddblinter.parserVersion=0.21.0
+./mvnw clean deploy -Ddblinter.repoUrl=https://api.dblinter.app -Ddblinter.parserVersion=0.24.0
 ```
 
 ## Post-Generation Changes
